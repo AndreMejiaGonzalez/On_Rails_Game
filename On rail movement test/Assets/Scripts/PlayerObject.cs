@@ -6,6 +6,49 @@ using DG.Tweening;
 
 public class PlayerObject : MonoBehaviour
 {
+    public struct Charge
+    {
+        public float min;
+        public float max;
+
+        private float _chargeValue;
+        public float chargeValue
+        {
+            get
+            {
+                return this._chargeValue;
+            }
+
+            set
+            {
+                _chargeValue = value >= min && value <= max ? value : _chargeValue;
+            }
+        }
+
+        public float normalizedChargeValue
+        {
+            get
+            {
+                return this.chargeValue / max;
+            }
+        }
+
+        public void chargeUp(float gain)
+        {
+            this.chargeValue = chargeValue + gain > max ? max : this.chargeValue + gain;
+        }
+
+        public void chargeDown(float loss)
+        {
+            this.chargeValue = chargeValue - loss < min ? min : this.chargeValue - loss;
+        }
+
+        public void deplete()
+        {
+            this.chargeValue = min;
+        }
+    }
+
     private Transform playerModel;
 
     [SerializeField]
@@ -17,6 +60,8 @@ public class PlayerObject : MonoBehaviour
     [SerializeField]
     private float leanLimit;
 
+    private Charge shotCharge;
+
     public Transform aimTarget;
     public CinemachineDollyCart dollyCart;
     public Transform cameraParent;
@@ -27,11 +72,12 @@ public class PlayerObject : MonoBehaviour
 
     void Start()
     {
+        shotCharge.max = 1;
+        shotCharge.min = 0;
         playerModel = transform.GetChild(0);
         setSpeed(forwardSpeed);
     }
 
-    // Update is called once per frame
     void Update()
     {
         Vector3 movement = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0);
@@ -41,30 +87,45 @@ public class PlayerObject : MonoBehaviour
         rotationLook(new Vector3(movement.x, movement.y , 1));
         horizontalLean(playerModel, movement.x, leanLimit, .1f);
 
-        if(Input.GetKeyDown("k"))
+        shotCharge.chargeUp(Time.deltaTime);
+
+        if(Input.GetButtonDown("Fire1"))
         {
             doBreak(true);
         }
 
-        if(Input.GetKeyUp("k"))
+        if(Input.GetButtonUp("Fire1"))
         {
             doBreak(false);
         }
 
-        if(Input.GetKeyDown("l"))
+        if(Input.GetButtonDown("Fire2"))
         {
             boost(true);
         }
 
-        if(Input.GetKeyUp("l"))
+        if(Input.GetButtonUp("Fire2"))
         {
             boost(false);
         }
 
-        if(Input.GetKeyDown("o") || Input.GetKeyDown("p"))
+        if(Input.GetButtonDown("BumperLeft") || Input.GetButtonDown("BumperRight") || Input.GetKeyDown(KeyCode.O))
         {
-            int direction = Input.GetKeyDown("o") ? 1 : -1;
+            int direction = Input.GetButtonDown("BumperLeft") ? 1 : -1;
             barrelRoll(direction);
+        }
+
+        if(Input.GetMouseButtonDown(1))
+        {
+        }
+
+        if(Input.GetMouseButtonDown(0))
+        {
+            if(shotCharge.chargeValue == shotCharge.max)
+            {
+                shotCharge.deplete();
+                Debug.Log("fire");
+            }
         }
     }
 
