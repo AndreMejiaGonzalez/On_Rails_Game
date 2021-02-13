@@ -57,21 +57,11 @@ public class PlayerObject : MonoBehaviour
     private float jumpForce;
     [SerializeField]
     private float leanLimit;
-
-    private bool jumpFlag
-    {
-        get
-        {
-            return Input.GetKeyDown(KeyCode.W);
-        }
-    }
-    private bool jumpHeldFlag
-    {
-        get
-        {
-            return Input.GetKey(KeyCode.W);
-        }
-    }
+    [SerializeField]
+    private float fallMultiplier;
+    [SerializeField]
+    private float lowJumpMultiplier;
+    private bool jumpHeldFlag;
 
     private Rigidbody rb;
 
@@ -91,21 +81,27 @@ public class PlayerObject : MonoBehaviour
         setSpeed(forwardSpeed);
     }
 
-    void FixedUpdate()
-    {
-
-    }
-
     void Update()
     {
-        JumpFunc();
         Vector3 movement = new Vector3(Input.GetAxis("Horizontal"), 0, 0);
 
         playerMovement(movement);
         clampPosition();
         horizontalLean(this.transform, movement.x, leanLimit, .1f);
+        jumpCurve();
 
         shotCharge.chargeUp(Time.deltaTime);
+
+        if(Input.GetKeyDown(KeyCode.W))
+        {
+            jumpHeldFlag = true;
+            rb.AddForce(new Vector3(0,jumpForce,0), ForceMode.Impulse);
+        }
+
+        if(Input.GetKeyUp(KeyCode.W))
+        {
+            jumpHeldFlag = false;
+        }
 
         if(Input.GetKeyDown(KeyCode.Space))
         {
@@ -129,7 +125,6 @@ public class PlayerObject : MonoBehaviour
 
         if(Input.GetMouseButtonDown(1))
         {
-            Debug.Log("meelee goes here");
         }
 
         if(Input.GetMouseButtonDown(0))
@@ -137,7 +132,6 @@ public class PlayerObject : MonoBehaviour
             if(shotCharge.chargeValue == shotCharge.max)
             {
                 shotCharge.deplete();
-                Debug.Log("fire");
             }
         }
     }
@@ -147,11 +141,14 @@ public class PlayerObject : MonoBehaviour
         this.transform.localPosition += movement * xySpeed * Time.deltaTime;
     }
 
-    void JumpFunc()
+    void jumpCurve()
     {
-        if(jumpFlag)
+        if(rb.velocity.y < 0)
         {
-            rb.velocity += Vector3.up * jumpForce * Time.deltaTime;
+            rb.velocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
+        } else if(rb.velocity.y > 0 && !jumpHeldFlag)
+        {
+            rb.velocity += Vector3.up * Physics.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
         }
     }
 
