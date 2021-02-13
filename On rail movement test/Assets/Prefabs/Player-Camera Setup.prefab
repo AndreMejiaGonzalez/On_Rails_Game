@@ -4990,7 +4990,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1279157124521931920}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1606311574137002306}
@@ -5010,16 +5010,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d7bb10b64631d94fb5a541a1629a5e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xySpeed: 10
-  lookSpeed: 5000
+  xySpeed: 20
   forwardSpeed: 20
-  leanLimit: 80
+  jumpForce: 18
+  leanLimit: 5
+  fallMultiplier: 5
+  lowJumpMultiplier: 8
   aimTarget: {fileID: 1279157123970200947}
   dollyCart: {fileID: 1279157124678746297}
   cameraParent: {fileID: 1279157125198264391}
-  trail: {fileID: 1279157125629771798}
   circle: {fileID: 1279157125494362084}
-  barrel: {fileID: 1279157124816576236}
 --- !u!54 &8681988890772428799
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -10061,7 +10061,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1279157125418486427}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -8.85}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1279157124407292367}
@@ -10116,10 +10116,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 1279157124521931935}
-  offset: {x: 0, y: 0, z: 0}
-  limits: {x: 5, y: 3}
-  smoothTime: 0.2
-  velocity: {x: 0, y: 0, z: 0}
+  offset: {x: 0, y: 3, z: -15}
+  limits: {x: 10, y: 10, z: 50}
 --- !u!114 &1279157125418486439
 MonoBehaviour:
   m_ObjectHideFlags: 0

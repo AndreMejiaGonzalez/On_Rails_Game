@@ -10,11 +10,6 @@ public class CameraMovement : MonoBehaviour
     private Vector3 offset = Vector3.zero;
     [SerializeField]
     private Vector3 limits;
-    [SerializeField]
-    [Range(0,1)]
-    private float smoothTime;
-    [SerializeField]
-    private Vector3 velocity = Vector3.zero;
 
     void Update()
     {
@@ -37,7 +32,7 @@ public class CameraMovement : MonoBehaviour
     {
         Vector3 localPos = transform.localPosition;
         Vector3 targetLocalPos = target.transform.localPosition;
-        transform.localPosition = Vector3.SmoothDamp(localPos, new Vector3(targetLocalPos.x + offset.x, target.localPosition.y + offset.y, targetLocalPos.z + offset.z), ref velocity, smoothTime);
+        transform.localPosition = new Vector3(targetLocalPos.x + offset.x, target.localPosition.y + offset.y, targetLocalPos.z + offset.z);
     }
 
     private void OnDrawGizmos()

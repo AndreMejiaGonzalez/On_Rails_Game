@@ -61,11 +61,13 @@ public class PlayerObject : MonoBehaviour
     private float fallMultiplier;
     [SerializeField]
     private float lowJumpMultiplier;
+    private bool isJumping;
     private bool jumpHeldFlag;
 
     private Rigidbody rb;
 
-    private Charge shotCharge;
+    public Charge shotCharge;
+    public Charge hoverCharge;
 
     public Transform aimTarget;
     public CinemachineDollyCart dollyCart;
@@ -78,6 +80,8 @@ public class PlayerObject : MonoBehaviour
         rb = this.GetComponent<Rigidbody>();
         shotCharge.max = 1;
         shotCharge.min = 0;
+        hoverCharge.max = 3;
+        hoverCharge.min = 0;
         setSpeed(forwardSpeed);
     }
 
@@ -91,16 +95,33 @@ public class PlayerObject : MonoBehaviour
         jumpCurve();
 
         shotCharge.chargeUp(Time.deltaTime);
+        if(!isJumping)
+        {
+            hoverCharge.chargeUp(Time.deltaTime);
+        }
 
         if(Input.GetKeyDown(KeyCode.W))
         {
-            jumpHeldFlag = true;
-            rb.AddForce(new Vector3(0,jumpForce,0), ForceMode.Impulse);
+            if(!isJumping)
+            {
+                isJumping = true;
+                jumpHeldFlag = true;
+                rb.AddForce(new Vector3(0,jumpForce,0), ForceMode.Impulse);
+            }
         }
 
         if(Input.GetKeyUp(KeyCode.W))
         {
             jumpHeldFlag = false;
+        }
+
+        if(Input.GetKey(KeyCode.W))
+        {
+            if(!jumpHeldFlag && hoverCharge.chargeValue > hoverCharge.min)
+            {
+                rb.velocity = new Vector3(rb.velocity.x,0,rb.velocity.z);
+                hoverCharge.chargeDown(Time.deltaTime);
+            }
         }
 
         if(Input.GetKeyDown(KeyCode.Space))
@@ -149,6 +170,14 @@ public class PlayerObject : MonoBehaviour
         } else if(rb.velocity.y > 0 && !jumpHeldFlag)
         {
             rb.velocity += Vector3.up * Physics.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
+        }
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        if(collision.gameObject.tag == "Floor")
+        {
+            isJumping = false;
         }
     }
 
