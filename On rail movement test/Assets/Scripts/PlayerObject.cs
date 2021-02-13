@@ -49,16 +49,31 @@ public class PlayerObject : MonoBehaviour
         }
     }
 
-    private Transform playerModel;
-
     [SerializeField]
     private float xySpeed;
     [SerializeField]
-    private float lookSpeed;
-    [SerializeField]
     private float forwardSpeed;
     [SerializeField]
+    private float jumpForce;
+    [SerializeField]
     private float leanLimit;
+
+    private bool jumpFlag
+    {
+        get
+        {
+            return Input.GetKeyDown(KeyCode.W);
+        }
+    }
+    private bool jumpHeldFlag
+    {
+        get
+        {
+            return Input.GetKey(KeyCode.W);
+        }
+    }
+
+    private Rigidbody rb;
 
     private Charge shotCharge;
 
@@ -66,57 +81,55 @@ public class PlayerObject : MonoBehaviour
     public CinemachineDollyCart dollyCart;
     public Transform cameraParent;
 
-    public ParticleSystem trail;
     public ParticleSystem circle;
-    public ParticleSystem barrel;
 
     void Start()
     {
+        rb = this.GetComponent<Rigidbody>();
         shotCharge.max = 1;
         shotCharge.min = 0;
-        playerModel = transform.GetChild(0);
         setSpeed(forwardSpeed);
+    }
+
+    void FixedUpdate()
+    {
+
     }
 
     void Update()
     {
-        Vector3 movement = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0);
+        JumpFunc();
+        Vector3 movement = new Vector3(Input.GetAxis("Horizontal"), 0, 0);
 
         playerMovement(movement);
         clampPosition();
-        rotationLook(new Vector3(movement.x, movement.y , 1));
-        horizontalLean(playerModel, movement.x, leanLimit, .1f);
+        horizontalLean(this.transform, movement.x, leanLimit, .1f);
 
         shotCharge.chargeUp(Time.deltaTime);
 
-        if(Input.GetButtonDown("Fire1"))
+        if(Input.GetKeyDown(KeyCode.Space))
         {
             doBreak(true);
         }
 
-        if(Input.GetButtonUp("Fire1"))
+        if(Input.GetKeyUp(KeyCode.Space))
         {
             doBreak(false);
         }
 
-        if(Input.GetButtonDown("Fire2"))
+        if(Input.GetKeyDown(KeyCode.LeftShift))
         {
             boost(true);
         }
 
-        if(Input.GetButtonUp("Fire2"))
+        if(Input.GetKeyUp(KeyCode.LeftShift))
         {
             boost(false);
         }
 
-        if(Input.GetButtonDown("BumperLeft") || Input.GetButtonDown("BumperRight") || Input.GetKeyDown(KeyCode.O))
-        {
-            int direction = Input.GetButtonDown("BumperLeft") ? 1 : -1;
-            barrelRoll(direction);
-        }
-
         if(Input.GetMouseButtonDown(1))
         {
+            Debug.Log("meelee goes here");
         }
 
         if(Input.GetMouseButtonDown(0))
@@ -131,7 +144,15 @@ public class PlayerObject : MonoBehaviour
 
     void playerMovement(Vector3 movement)
     {
-        transform.localPosition += movement * xySpeed * Time.deltaTime;
+        this.transform.localPosition += movement * xySpeed * Time.deltaTime;
+    }
+
+    void JumpFunc()
+    {
+        if(jumpFlag)
+        {
+            rb.velocity += Vector3.up * jumpForce * Time.deltaTime;
+        }
     }
 
     void clampPosition()
@@ -142,33 +163,10 @@ public class PlayerObject : MonoBehaviour
         transform.position = Camera.main.ViewportToWorldPoint(pos);
     }
 
-    void rotationLook(Vector3 movement)
-    {
-        aimTarget.parent.position = Vector3.zero;
-        aimTarget.localPosition = movement;
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(aimTarget.position), Mathf.Deg2Rad * lookSpeed * Time.deltaTime);
-    }
-
     void horizontalLean(Transform target, float axis, float leanLimit, float lerpTime)
     {
         Vector3 targetEulerAngles = target.localEulerAngles;
         target.localEulerAngles = new Vector3(targetEulerAngles.x, targetEulerAngles.y, Mathf.LerpAngle(targetEulerAngles.z, -axis * leanLimit, lerpTime));
-    }
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(aimTarget.position, .5f);
-        Gizmos.DrawSphere(aimTarget.position, .15f);
-    }
-
-    public void barrelRoll(int direction)
-    {
-        if(!DOTween.IsTweening(playerModel))
-        {
-            playerModel.DOLocalRotate(new Vector3(playerModel.localEulerAngles.x, playerModel.localEulerAngles.y, 360 * direction), .4f, RotateMode.LocalAxisAdd).SetEase(Ease.OutSine);
-            barrel.Play();
-        }
     }
 
     void setSpeed(float speed)
@@ -186,7 +184,6 @@ public class PlayerObject : MonoBehaviour
         if(state)
         {
             cameraParent.GetComponentInChildren<CinemachineImpulseSource>().GenerateImpulse();
-            trail.Play();
             circle.Play();
         }
 
