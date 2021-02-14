@@ -63,6 +63,10 @@ public class PlayerObject : MonoBehaviour
     private float lowJumpMultiplier;
     private bool isJumping;
     private bool jumpHeldFlag;
+    
+    private Ray ray;
+    private RaycastHit hit;
+    private bool didHit;
 
     private Rigidbody rb;
 
@@ -73,6 +77,8 @@ public class PlayerObject : MonoBehaviour
     public CinemachineDollyCart dollyCart;
     public Transform cameraParent;
 
+    public HUD hud;
+
     public ParticleSystem circle;
 
     void Start()
@@ -82,7 +88,21 @@ public class PlayerObject : MonoBehaviour
         shotCharge.min = 0;
         hoverCharge.max = 3;
         hoverCharge.min = 0;
+        shotCharge.chargeValue = shotCharge.max;
+        hoverCharge.chargeValue = hoverCharge.max;
         setSpeed(forwardSpeed);
+    }
+
+    void FixedUpdate()
+    {
+        ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        didHit = Physics.Raycast(ray, out hit);
+        if(didHit)
+        {
+            hud.crosshairOverlay.gameObject.SetActive(true);
+        } else {
+            hud.crosshairOverlay.gameObject.SetActive(false);
+        }
     }
 
     void Update()
@@ -152,6 +172,7 @@ public class PlayerObject : MonoBehaviour
         {
             if(shotCharge.chargeValue == shotCharge.max)
             {
+                laserEffect();
                 shotCharge.deplete();
             }
         }
@@ -171,6 +192,21 @@ public class PlayerObject : MonoBehaviour
         {
             rb.velocity += Vector3.up * Physics.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
         }
+    }
+
+    void laserEffect()
+    {
+        Vector3[] pos;
+        GameObject laser = Resources.Load<GameObject>("Prefabs/Laser");
+        if(didHit)
+        {
+            pos = new Vector3[] {this.transform.position, hit.point};
+        } else {
+            pos = new Vector3[] {this.transform.position, Camera.main.ScreenToWorldPoint(Input.mousePosition + new Vector3(0,0,500))};
+        }
+        LineRenderer lr = laser.GetComponent<LineRenderer>();
+        lr.SetPositions(pos);
+        Instantiate(laser);
     }
 
     void OnCollisionEnter(Collision collision)
